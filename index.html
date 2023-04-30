@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <style>
+       body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+input, button {
+    margin-top: 10px;
+}
+
+    </style>
+</head>
+<body>
+    <h1>QR Code Generator</h1>
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name">
+    <br>
+    <label for="id">ID:</label>
+    <input type="text" id="id" name="id">
+    <br>
+    <button id="generateBtn">Generate QR Code</button>
+    <br>
+    <div id="qrcode"></div>
+    <br>
+    <button id="downloadBtn" hidden>Download QR Code</button>
+
+    <script>
+        // Add your JavaScript code here
+        document.getElementById("generateBtn").addEventListener("click", function () {
+    const name = document.getElementById("name").value;
+    const id = document.getElementById("id").value;
+
+    if (name === "" || id === "") {
+        alert("Please enter both name and ID.");
+        return;
+    }
+
+    const data = JSON.stringify({ name: name, id: id });
+
+    const qrcodeContainer = document.getElementById("qrcode");
+    qrcodeContainer.innerHTML = ""; // Clear the container
+
+    const qrCode = new QRCode(qrcodeContainer, {
+        text: data,
+        width: 128,
+        height: 128,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H,
+    });
+
+    document.getElementById("downloadBtn").hidden = false;
+
+    //hit a post api to save the data
+    fetch("http://localhost:3000/participants", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: data,
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log("Success:", data);
+        })
+        .catch((error) => {
+            console.error("Error:", error);
+        });
+
+});
+
+document.getElementById("downloadBtn").addEventListener("click", function () {
+    const canvas = document.querySelector("#qrcode canvas");
+    const imgDataUrl = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+    const link = document.createElement("a");
+    link.href = imgDataUrl;
+    link.download = "QRCode.png";
+    link.click();
+});
+
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+</body>
+</html>
